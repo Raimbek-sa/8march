@@ -379,6 +379,7 @@ const music = (() => {
     if (!a) return
     a.addEventListener('play', () => updateButtonState(btn, true))
     a.addEventListener('pause', () => updateButtonState(btn, false))
+    a.addEventListener('error', () => showToast('Ошибка загрузки аудио: ' + (a.src || '')))
     function handleToggle() {
       const now = Date.now()
       if (now - lastToggle < 350) return
