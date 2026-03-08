@@ -304,34 +304,38 @@ const sisterCanvas = document.querySelector('.particles--sister')
 const confettiCanvas = document.querySelector('.confetti')
 const flowers = Array.from(document.querySelectorAll('.flower'))
 
-let soundUnlocked = false
-function createSoundGate() {
-  if (soundUnlocked) return
-  const gate = document.createElement('div')
-  gate.className = 'sound-gate'
-  const btn = document.createElement('button')
-  btn.className = 'sound-gate__btn'
-  btn.textContent = 'Включить звук'
-  btn.addEventListener('pointerdown', () => {
+let audioUnlocked = false
+function setupAudioUnlock() {
+  function unlockOnce() {
+    if (audioUnlocked) return
+    audioUnlocked = true
     const list = Array.from(document.querySelectorAll('audio[id^="audio-"]'))
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext
+      if (AC) {
+        const ctx = new AC()
+        if (ctx && typeof ctx.resume === 'function') ctx.resume().catch(()=>{})
+      }
+    } catch (_) {}
     list.forEach(a => {
       try {
         a.muted = true
         const p = a.play()
         if (p && typeof p.then === 'function') {
-          p.then(() => {
-            setTimeout(() => { a.pause(); a.currentTime = 0; a.muted = false }, 160)
-          }).catch(() => {})
+          p.then(() => { a.pause(); a.currentTime = 0; a.muted = false })
+               .catch(()=>{})
         }
       } catch (_) {}
     })
-    soundUnlocked = true
-    gate.remove()
-  }, { passive: false })
-  gate.appendChild(btn)
-  document.body.appendChild(gate)
+    document.removeEventListener('pointerdown', unlockOnce, true)
+    document.removeEventListener('touchstart', unlockOnce, true)
+    document.removeEventListener('click', unlockOnce, true)
+  }
+  document.addEventListener('pointerdown', unlockOnce, true)
+  document.addEventListener('touchstart', unlockOnce, true)
+  document.addEventListener('click', unlockOnce, true)
 }
-createSoundGate()
+setupAudioUnlock()
 
 const music = (() => {
   const buttons = Array.from(document.querySelectorAll('.audio-ctrl'))
@@ -339,7 +343,9 @@ const music = (() => {
   const byId = {}
   tracks.forEach(a => {
     a.volume = 0.65
+    a.preload = 'auto'
     a.setAttribute('playsinline', '')
+    a.setAttribute('webkit-playsinline', '')
     byId[a.id] = a
   })
   function updateButtonState(btn, playing) {
@@ -348,28 +354,23 @@ const music = (() => {
   }
   let lastToggle = 0
   function stopOthers(except) {
-    tracks.forEach(x => {
-      if (x !== except) { x.pause(); x.volume = 0 }
-    })
+    tracks.forEach(x => { if (x !== except) { x.pause(); x.volume = 0 } })
   }
-  function playWithUnlock(a) {
-    a.currentTime = Math.max(0, a.currentTime || 0)
+  function tryPlay(a) {
+    a.currentTime = 0
     a.volume = 0
     a.muted = false
     const p = a.play()
     if (p && typeof p.then === 'function') {
-      return p.then(() => fadeIn(a, 450, 0.65)).catch(() => {
+      p.then(() => fadeIn(a, 450, 0.65)).catch(() => {
         a.muted = true
         const p2 = a.play()
         if (p2 && typeof p2.then === 'function') {
-          return p2.then(() => {
-            setTimeout(() => { a.muted = false }, 160)
-            return fadeIn(a, 450, 0.65)
-          }).catch(() => {
-            showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.')
-          })
+          p2.then(() => { setTimeout(() => { a.muted = false }, 160); fadeIn(a, 450, 0.65) })
+            .catch(() => showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.'))
+        } else {
+          showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.')
         }
-        showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.')
       })
     }
   }
@@ -380,36 +381,21 @@ const music = (() => {
     a.addEventListener('play', () => updateButtonState(btn, true))
     a.addEventListener('pause', () => updateButtonState(btn, false))
     a.addEventListener('error', () => showToast('Ошибка загрузки аудио: ' + (a.src || '')))
-    function handleToggle() {
+    function onToggle() {
       const now = Date.now()
-      if (now - lastToggle < 350) return
+      if (now - lastToggle < 300) return
       lastToggle = now
-      if (a.paused) {
-        stopOthers(a)
-        playWithUnlock(a)
-      } else {
-        fadeOut(a, 350).then(() => a.pause())
-      }
+      if (a.paused) { stopOthers(a); tryPlay(a) }
+      else { fadeOut(a, 350).then(() => a.pause()) }
     }
     let recentTouch = 0
     if (window.PointerEvent) {
-      btn.addEventListener('pointerdown', handleToggle, { passive: false })
+      btn.addEventListener('pointerdown', onToggle, { passive: false })
     } else {
-      btn.addEventListener('touchstart', e => { recentTouch = Date.now(); e.preventDefault(); handleToggle() }, { passive: false })
-      btn.addEventListener('click', e => { if (Date.now() - recentTouch < 400) return; handleToggle() }, { passive: false })
+      btn.addEventListener('touchstart', e => { recentTouch = Date.now(); e.preventDefault(); onToggle() }, { passive: false })
+      btn.addEventListener('click', e => { if (Date.now() - recentTouch < 350) return; onToggle() }, { passive: false })
     }
   })
-  const audioObs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      const section = e.target
-      const btn = section.querySelector('.audio-ctrl')
-      const id = btn && btn.getAttribute('data-audio')
-      const a = id && byId[id]
-      if (!a) return
-      if (e.intersectionRatio <= 0) a.pause()
-    })
-  }, { threshold: 0 })
-  document.querySelectorAll('.section').forEach(sec => audioObs.observe(sec))
   return {}
 })()
 
