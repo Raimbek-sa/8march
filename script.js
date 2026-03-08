@@ -313,13 +313,27 @@ const AudioEngine = {
       const audioId = btn.dataset.audio;
       const audio = document.getElementById(audioId);
       
+      let lastPress = 0;
       const handlePress = (e) => {
+        const now = Date.now();
+        if (now - lastPress < 400) return;
+        lastPress = now;
+
         e.preventDefault();
+        e.stopPropagation();
+        
+        console.log("Audio press detected for:", audioId);
         this.toggle(audio, btn);
       };
 
-      btn.addEventListener('click', handlePress);
-      btn.addEventListener('touchstart', handlePress, { passive: false });
+      // Используем pointerdown для максимальной отзывчивости (поддерживается в Chrome Mobile)
+      btn.addEventListener('pointerdown', handlePress, { passive: false });
+      
+      // На всякий случай для старых Safari
+      if (!window.PointerEvent) {
+        btn.addEventListener('touchstart', handlePress, { passive: false });
+        btn.addEventListener('click', handlePress);
+      }
     });
   },
 
@@ -330,19 +344,22 @@ const AudioEngine = {
     }
 
     if (audio.paused) {
+      console.log("Attempting to play audio...");
       audio.play().then(() => {
+        console.log("Playback started!");
         btn.classList.add('playing');
         this.current = { audio, btn };
       }).catch(err => {
-        console.log("Play blocked, retrying with direct interaction");
-        audio.muted = true;
+        console.log("Playback blocked, trying fallback...");
+        // Вторая попытка: сброс и игра
+        audio.load();
         audio.play().then(() => {
-          setTimeout(() => { audio.muted = false; }, 100);
           btn.classList.add('playing');
           this.current = { audio, btn };
-        });
+        }).catch(e => alert("Браузер заблокировал музыку. Нажмите еще раз!"));
       });
     } else {
+      console.log("Pausing audio...");
       audio.pause();
       btn.classList.remove('playing');
       this.current = null;
