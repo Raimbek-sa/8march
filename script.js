@@ -324,6 +324,17 @@ const music = (() => {
     })
   }
   function playWithUnlock(a) {
+    if (a.readyState < 2) {
+      a.load()
+    }
+    const waitReady = new Promise(res => {
+      let done = false
+      const onReady = () => { if (done) return; done = true; a.removeEventListener('canplay', onReady); a.removeEventListener('canplaythrough', onReady); res() }
+      a.addEventListener('canplay', onReady, { once: true })
+      a.addEventListener('canplaythrough', onReady, { once: true })
+      setTimeout(() => { if (!done) { done = true; res() } }, 1200)
+    })
+    return waitReady.then(() => {
     a.currentTime = Math.max(0, a.currentTime || 0)
     a.volume = 0
     a.muted = false
@@ -343,6 +354,7 @@ const music = (() => {
         showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.')
       })
     }
+    })
   }
   buttons.forEach(btn => {
     const id = btn.getAttribute('data-audio')
