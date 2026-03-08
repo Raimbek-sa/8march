@@ -376,9 +376,9 @@ const music = (() => {
       const id = btn && btn.getAttribute('data-audio')
       const a = id && byId[id]
       if (!a) return
-      if (!e.isIntersecting) a.pause()
+      if (e.intersectionRatio <= 0) a.pause()
     })
-  }, { threshold: 0.1 })
+  }, { threshold: 0 })
   document.querySelectorAll('.section').forEach(sec => audioObs.observe(sec))
   return {}
 })()
