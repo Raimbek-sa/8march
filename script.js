@@ -324,17 +324,6 @@ const music = (() => {
     })
   }
   function playWithUnlock(a) {
-    if (a.readyState < 2) {
-      a.load()
-    }
-    const waitReady = new Promise(res => {
-      let done = false
-      const onReady = () => { if (done) return; done = true; a.removeEventListener('canplay', onReady); a.removeEventListener('canplaythrough', onReady); res() }
-      a.addEventListener('canplay', onReady, { once: true })
-      a.addEventListener('canplaythrough', onReady, { once: true })
-      setTimeout(() => { if (!done) { done = true; res() } }, 1200)
-    })
-    return waitReady.then(() => {
     a.currentTime = Math.max(0, a.currentTime || 0)
     a.volume = 0
     a.muted = false
@@ -354,7 +343,6 @@ const music = (() => {
         showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.')
       })
     }
-    })
   }
   buttons.forEach(btn => {
     const id = btn.getAttribute('data-audio')
@@ -362,7 +350,7 @@ const music = (() => {
     if (!a) return
     a.addEventListener('play', () => updateButtonState(btn, true))
     a.addEventListener('pause', () => updateButtonState(btn, false))
-    btn.addEventListener('pointerdown', e => {
+    function handleToggle() {
       const now = Date.now()
       if (now - lastToggle < 350) return
       lastToggle = now
@@ -372,7 +360,9 @@ const music = (() => {
       } else {
         fadeOut(a, 350).then(() => a.pause())
       }
-    }, { passive: false })
+    }
+    btn.addEventListener('pointerdown', handleToggle, { passive: false })
+    btn.addEventListener('click', handleToggle, { passive: false })
   })
   const audioObs = new IntersectionObserver(entries => {
     entries.forEach(e => {
