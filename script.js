@@ -349,14 +349,19 @@ audioButtons.forEach(btn => {
     }
   }
   function toggle() {
+  }
+  let lastToggle = 0
+  function onClickToggle(e) {
+    const now = Date.now()
+    if (now - lastToggle < 350) return
+    lastToggle = now
     if (audio.paused) {
       playWithFallback(audio)
     } else {
       fadeOut(audio, 350).then(() => audio.pause())
     }
   }
-  btn.addEventListener('click', toggle, { passive: false })
-  btn.addEventListener('touchend', toggle, { passive: true })
+  btn.addEventListener('click', onClickToggle, { passive: false })
 })
 
 const audioObs = new IntersectionObserver(entries => {
