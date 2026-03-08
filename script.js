@@ -304,6 +304,35 @@ const sisterCanvas = document.querySelector('.particles--sister')
 const confettiCanvas = document.querySelector('.confetti')
 const flowers = Array.from(document.querySelectorAll('.flower'))
 
+let soundUnlocked = false
+function createSoundGate() {
+  if (soundUnlocked) return
+  const gate = document.createElement('div')
+  gate.className = 'sound-gate'
+  const btn = document.createElement('button')
+  btn.className = 'sound-gate__btn'
+  btn.textContent = 'Включить звук'
+  btn.addEventListener('pointerdown', () => {
+    const list = Array.from(document.querySelectorAll('audio[id^="audio-"]'))
+    list.forEach(a => {
+      try {
+        a.muted = true
+        const p = a.play()
+        if (p && typeof p.then === 'function') {
+          p.then(() => {
+            setTimeout(() => { a.pause(); a.currentTime = 0; a.muted = false }, 160)
+          }).catch(() => {})
+        }
+      } catch (_) {}
+    })
+    soundUnlocked = true
+    gate.remove()
+  }, { passive: false })
+  gate.appendChild(btn)
+  document.body.appendChild(gate)
+}
+createSoundGate()
+
 const music = (() => {
   const buttons = Array.from(document.querySelectorAll('.audio-ctrl'))
   const tracks = Array.from(document.querySelectorAll('audio[id^="audio-"]'))
