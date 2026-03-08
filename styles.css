@@ -221,10 +221,11 @@ html { scroll-behavior: smooth }
 
 .audio-ctrl {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 46px;
-  height: 46px;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
   border: none;
   border-radius: 999px;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -236,7 +237,7 @@ html { scroll-behavior: smooth }
   transition: transform .2s ease, filter .2s ease;
   touch-action: manipulation;
 }
-.audio-ctrl:active { transform: scale(.96) }
+.audio-ctrl:active { transform: translateX(-50%) scale(.96) }
 .audio-ctrl::before {
   content: '';
   display: block;
