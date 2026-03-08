@@ -303,8 +303,54 @@ const momCanvas = document.querySelector('.particles--mom')
 const sisterCanvas = document.querySelector('.particles--sister')
 const confettiCanvas = document.querySelector('.confetti')
 const flowers = Array.from(document.querySelectorAll('.flower'))
- 
- 
+
+// --- NEW AUDIO ENGINE ---
+const AudioEngine = {
+  current: null,
+  
+  init() {
+    document.querySelectorAll('.music-btn').forEach(btn => {
+      const audioId = btn.dataset.audio;
+      const audio = document.getElementById(audioId);
+      
+      const handlePress = (e) => {
+        e.preventDefault();
+        this.toggle(audio, btn);
+      };
+
+      btn.addEventListener('click', handlePress);
+      btn.addEventListener('touchstart', handlePress, { passive: false });
+    });
+  },
+
+  toggle(audio, btn) {
+    if (this.current && this.current.audio !== audio) {
+      this.current.audio.pause();
+      this.current.btn.classList.remove('playing');
+    }
+
+    if (audio.paused) {
+      audio.play().then(() => {
+        btn.classList.add('playing');
+        this.current = { audio, btn };
+      }).catch(err => {
+        console.log("Play blocked, retrying with direct interaction");
+        audio.muted = true;
+        audio.play().then(() => {
+          setTimeout(() => { audio.muted = false; }, 100);
+          btn.classList.add('playing');
+          this.current = { audio, btn };
+        });
+      });
+    } else {
+      audio.pause();
+      btn.classList.remove('playing');
+      this.current = null;
+    }
+  }
+};
+
+AudioEngine.init();
 
 function Particles(canvas, opts = {}) {
   this.c = canvas
