@@ -304,78 +304,77 @@ const sisterCanvas = document.querySelector('.particles--sister')
 const confettiCanvas = document.querySelector('.confetti')
 const flowers = Array.from(document.querySelectorAll('.flower'))
 
-const audioButtons = Array.from(document.querySelectorAll('.audio-ctrl'))
-const audios = Array.from(document.querySelectorAll('audio[id^="audio-"]'))
-
-audios.forEach(a => {
-  a.volume = 0.65
-  a.setAttribute('playsinline', '')
-})
-
-function updateButtonState(btn, playing) {
-  btn.classList.toggle('is-playing', playing)
-  btn.setAttribute('aria-pressed', playing ? 'true' : 'false')
-}
-
-audioButtons.forEach(btn => {
-  const id = btn.getAttribute('data-audio')
-  const audio = document.getElementById(id)
-  if (!audio) return
-  audio.addEventListener('play', () => updateButtonState(btn, true))
-  audio.addEventListener('pause', () => updateButtonState(btn, false))
-  function playWithFallback(a) {
-    audios.forEach(x => { if (x !== a) { x.pause(); x.volume = 0 } })
+const music = (() => {
+  const buttons = Array.from(document.querySelectorAll('.audio-ctrl'))
+  const tracks = Array.from(document.querySelectorAll('audio[id^="audio-"]'))
+  const byId = {}
+  tracks.forEach(a => {
+    a.volume = 0.65
+    a.setAttribute('playsinline', '')
+    byId[a.id] = a
+  })
+  function updateButtonState(btn, playing) {
+    btn.classList.toggle('is-playing', playing)
+    btn.setAttribute('aria-pressed', playing ? 'true' : 'false')
+  }
+  let lastToggle = 0
+  function stopOthers(except) {
+    tracks.forEach(x => {
+      if (x !== except) { x.pause(); x.volume = 0 }
+    })
+  }
+  function playWithUnlock(a) {
     a.currentTime = Math.max(0, a.currentTime || 0)
     a.volume = 0
     a.muted = false
     const p = a.play()
     if (p && typeof p.then === 'function') {
-      p.then(() => fadeIn(a, 450, 0.65)).catch(() => {
+      return p.then(() => fadeIn(a, 450, 0.65)).catch(() => {
         a.muted = true
         const p2 = a.play()
         if (p2 && typeof p2.then === 'function') {
-          p2.then(() => {
-            setTimeout(() => { a.muted = false }, 200)
-            fadeIn(a, 450, 0.65)
+          return p2.then(() => {
+            setTimeout(() => { a.muted = false }, 160)
+            return fadeIn(a, 450, 0.65)
           }).catch(() => {
             showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.')
           })
-        } else {
-          showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.')
         }
+        showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.')
       })
-    } else {
-      showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.')
     }
   }
-  function toggle() {
-  }
-  let lastToggle = 0
-  function onClickToggle(e) {
-    const now = Date.now()
-    if (now - lastToggle < 350) return
-    lastToggle = now
-    if (audio.paused) {
-      playWithFallback(audio)
-    } else {
-      fadeOut(audio, 350).then(() => audio.pause())
-    }
-  }
-  btn.addEventListener('click', onClickToggle, { passive: false })
-})
-
-const audioObs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    const section = e.target
-    const btn = section.querySelector('.audio-ctrl')
-    const id = btn && btn.getAttribute('data-audio')
-    const audio = id && document.getElementById(id)
-    if (!audio) return
-    if (!e.isIntersecting) audio.pause()
+  buttons.forEach(btn => {
+    const id = btn.getAttribute('data-audio')
+    const a = byId[id]
+    if (!a) return
+    a.addEventListener('play', () => updateButtonState(btn, true))
+    a.addEventListener('pause', () => updateButtonState(btn, false))
+    btn.addEventListener('pointerdown', e => {
+      const now = Date.now()
+      if (now - lastToggle < 350) return
+      lastToggle = now
+      if (a.paused) {
+        stopOthers(a)
+        playWithUnlock(a)
+      } else {
+        fadeOut(a, 350).then(() => a.pause())
+      }
+    }, { passive: false })
   })
-}, { threshold: 0.1 })
-
-document.querySelectorAll('.section').forEach(sec => audioObs.observe(sec))
+  const audioObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      const section = e.target
+      const btn = section.querySelector('.audio-ctrl')
+      const id = btn && btn.getAttribute('data-audio')
+      const a = id && byId[id]
+      if (!a) return
+      if (!e.isIntersecting) a.pause()
+    })
+  }, { threshold: 0.1 })
+  document.querySelectorAll('.section').forEach(sec => audioObs.observe(sec))
+  return {}
+})()
 
 function fadeIn(a, ms, target = 0.65) {
   return new Promise(resolve => {
