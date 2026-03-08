@@ -361,8 +361,13 @@ const music = (() => {
         fadeOut(a, 350).then(() => a.pause())
       }
     }
-    btn.addEventListener('pointerdown', handleToggle, { passive: false })
-    btn.addEventListener('click', handleToggle, { passive: false })
+    let recentTouch = 0
+    if (window.PointerEvent) {
+      btn.addEventListener('pointerdown', handleToggle, { passive: false })
+    } else {
+      btn.addEventListener('touchstart', e => { recentTouch = Date.now(); e.preventDefault(); handleToggle() }, { passive: false })
+      btn.addEventListener('click', e => { if (Date.now() - recentTouch < 400) return; handleToggle() }, { passive: false })
+    }
   })
   const audioObs = new IntersectionObserver(entries => {
     entries.forEach(e => {
