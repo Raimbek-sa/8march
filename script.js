@@ -323,19 +323,40 @@ audioButtons.forEach(btn => {
   if (!audio) return
   audio.addEventListener('play', () => updateButtonState(btn, true))
   audio.addEventListener('pause', () => updateButtonState(btn, false))
-  btn.addEventListener('click', () => {
+  function playWithFallback(a) {
+    audios.forEach(x => { if (x !== a) { x.pause(); x.volume = 0 } })
+    a.currentTime = Math.max(0, a.currentTime || 0)
+    a.volume = 0
+    a.muted = false
+    const p = a.play()
+    if (p && typeof p.then === 'function') {
+      p.then(() => fadeIn(a, 450, 0.65)).catch(() => {
+        a.muted = true
+        const p2 = a.play()
+        if (p2 && typeof p2.then === 'function') {
+          p2.then(() => {
+            setTimeout(() => { a.muted = false }, 200)
+            fadeIn(a, 450, 0.65)
+          }).catch(() => {
+            showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.')
+          })
+        } else {
+          showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.')
+        }
+      })
+    } else {
+      showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.')
+    }
+  }
+  function toggle() {
     if (audio.paused) {
-      audios.forEach(a => { if (a !== audio) { a.pause(); a.volume = 0 } })
-      audio.volume = 0
-      const p = audio.play()
-      if (p && typeof p.then === 'function') {
-        p.then(() => fadeIn(audio, 450, 0.65))
-         .catch(() => showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.'))
-      }
+      playWithFallback(audio)
     } else {
       fadeOut(audio, 350).then(() => audio.pause())
     }
-  }, { passive: false })
+  }
+  btn.addEventListener('click', toggle, { passive: false })
+  btn.addEventListener('touchend', toggle, { passive: true })
 })
 
 const audioObs = new IntersectionObserver(entries => {
