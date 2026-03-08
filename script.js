@@ -303,61 +303,7 @@ const momCanvas = document.querySelector('.particles--mom')
 const sisterCanvas = document.querySelector('.particles--sister')
 const confettiCanvas = document.querySelector('.confetti')
 const flowers = Array.from(document.querySelectorAll('.flower'))
-
-const audioButtons = Array.from(document.querySelectorAll('.audio-ctrl'))
-const audios = Array.from(document.querySelectorAll('audio[id^="audio-"]'))
-
-audioButtons.forEach(btn => {
-  const id = btn.getAttribute('data-audio')
-  const a = document.getElementById(id)
-  if (!a) return
-
-  const toggle = (e) => {
-    if (e) {
-      e.preventDefault()
-      e.stopPropagation()
-    }
-    
-    // Останавливаем все остальные
-    audios.forEach(other => {
-      if (other !== a) {
-        other.pause()
-        const otherBtn = document.querySelector(`.audio-ctrl[data-audio="${other.id}"]`)
-        if (otherBtn) otherBtn.classList.remove('is-playing')
-      }
-    })
-
-    if (a.paused) {
-      const playPromise = a.play()
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          btn.classList.add('is-playing')
-        }).catch(err => {
-          console.error("Playback failed:", err)
-          // Попытка сброса и повторного воспроизведения (иногда помогает на Android)
-          a.load()
-          a.play().then(() => btn.classList.add('is-playing')).catch(e => console.log("Final attempt failed"))
-        })
-      }
-    } else {
-      a.pause()
-      btn.classList.remove('is-playing')
-    }
-  }
-
-  // Для мобильных Chrome/Oppo используем pointerdown или touchstart для минимальной задержки
-  btn.addEventListener('pointerdown', toggle, { passive: false })
-  // Дублируем для старых устройств
-  if (!window.PointerEvent) {
-    btn.addEventListener('touchstart', toggle, { passive: false })
-  }
-})
  
-
- 
-
- 
-
  
 
 function Particles(canvas, opts = {}) {
