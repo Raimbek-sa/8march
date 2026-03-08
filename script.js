@@ -309,6 +309,7 @@ const audios = Array.from(document.querySelectorAll('audio[id^="audio-"]'))
 
 audios.forEach(a => {
   a.volume = 0.65
+  a.setAttribute('playsinline', '')
 })
 
 function updateButtonState(btn, playing) {
@@ -322,23 +323,18 @@ audioButtons.forEach(btn => {
   if (!audio) return
   audio.addEventListener('play', () => updateButtonState(btn, true))
   audio.addEventListener('pause', () => updateButtonState(btn, false))
-  btn.addEventListener('click', async () => {
-    try {
-      if (audio.paused) {
-        for (const a of audios) {
-          if (a !== audio && !a.paused) {
-            await fadeOut(a, 500)
-            a.pause()
-          }
-        }
-        audio.volume = 0
-        await audio.play()
-        await fadeIn(audio, 500, 0.65)
-      } else {
-        await fadeOut(audio, 400)
-        audio.pause()
+  btn.addEventListener('click', () => {
+    if (audio.paused) {
+      audios.forEach(a => { if (a !== audio) { a.pause(); a.volume = 0 } })
+      audio.volume = 0
+      const p = audio.play()
+      if (p && typeof p.then === 'function') {
+        p.then(() => fadeIn(audio, 450, 0.65))
+         .catch(() => showToast('Музыка не запустилась. Включи звук/громкость и попробуй ещё раз.'))
       }
-    } catch (_) {}
+    } else {
+      fadeOut(audio, 350).then(() => audio.pause())
+    }
   }, { passive: false })
 })
 
@@ -379,6 +375,19 @@ function fadeOut(a, ms) {
     }
     requestAnimationFrame(step)
   })
+}
+
+let toastEl = null
+function showToast(msg) {
+  if (!toastEl) {
+    toastEl = document.createElement('div')
+    toastEl.className = 'toast'
+    document.body.appendChild(toastEl)
+  }
+  toastEl.textContent = msg
+  toastEl.classList.add('show')
+  clearTimeout(showToast._to)
+  showToast._to = setTimeout(() => toastEl.classList.remove('show'), 2600)
 }
 
 function Particles(canvas, opts = {}) {
