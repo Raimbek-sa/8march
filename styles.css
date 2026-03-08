@@ -1,0 +1,341 @@
+@font-face {
+  font-family: 'System-UI-Stack';
+  src: local("-apple-system"), local("BlinkMacSystemFont");
+  font-weight: 400;
+}
+
+:root {
+  --bg: #0e0f12;
+  --fg: #f7f7f8;
+  --muted: #c7c7cc;
+  --accent: #ff4d6d;
+  --accent-2: #7c4dff;
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+  line-height: 1.55;
+}
+
+a { color: inherit; text-decoration: none }
+img { max-width: 100%; display: block }
+html { scroll-behavior: smooth }
+
+.hero {
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.particles {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: .8;
+  mix-blend-mode: screen;
+}
+
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(1200px 600px at 20% 10%, rgba(124,77,255,.25), transparent 60%),
+    radial-gradient(900px 500px at 80% 90%, rgba(255,77,109,.25), transparent 60%),
+    linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.35)),
+    url("photos/Headline.jpeg");
+  background-size: auto, auto, 100% 100%, cover;
+  background-position: center, center, center, center;
+  pointer-events: none;
+}
+
+.hero__content {
+  position: relative;
+  text-align: center;
+  padding: 24px;
+  animation: fadeSlide .9s ease-out both;
+  z-index: 2;
+}
+
+.flowers {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.flower {
+  position: absolute;
+  width: clamp(56px, 12vw, 92px);
+  height: auto;
+  opacity: .85;
+  transform: scale(.8);
+  filter: drop-shadow(0 6px 16px rgba(0,0,0,.25));
+  transition: transform .6s cubic-bezier(.22,.61,.36,1), opacity .6s ease, filter .6s ease;
+}
+.flower .petals ellipse {
+  transform-origin: 32px 32px;
+  transform: scale(0);
+  opacity: 0;
+  transition: transform .6s cubic-bezier(.22,.61,.36,1), opacity .6s ease;
+}
+.flower.bloom {
+  transform: scale(1) rotate(var(--rot, 0deg));
+  opacity: 1;
+  filter: drop-shadow(0 10px 24px rgba(0,0,0,.35));
+}
+.flower.bloom .petals ellipse {
+  transform: scale(1);
+  opacity: 1;
+}
+.flower--tl { top: 10px; left: 10px; --rot: -8deg }
+.flower--tr { top: 10px; right: 10px; --rot: 8deg }
+.flower--bl { bottom: 10px; left: 10px; --rot: 8deg }
+.flower--br { bottom: 10px; right: 10px; --rot: -8deg }
+
+.hero__title {
+  margin: 0 0 16px;
+  font-size: clamp(36px, 8vw, 64px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  text-wrap: balance;
+  background: linear-gradient(120deg, #fff 0%, #f5d0e6 40%, #d9c9ff 80%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 6px 20px rgba(255, 77, 109, .15));
+}
+
+.hero__cta {
+  display: inline-block;
+  padding: 14px 22px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 999px;
+  font-weight: 700;
+  box-shadow: var(--shadow);
+  transform: translateZ(0);
+  transition: transform .2s ease, filter .2s ease;
+}
+
+.hero__cta:active { transform: scale(.98) }
+
+.section {
+  padding: 48px 16px 72px;
+}
+
+.section__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  gap: 28px;
+  grid-template-columns: 1fr;
+  align-items: center;
+}
+
+@media (min-width: 800px) {
+  .section__inner {
+    grid-template-columns: 1fr 1.1fr;
+  }
+}
+
+.section__media {
+  position: relative;
+  width: 100%;
+  height: 420px;
+}
+
+@media (min-width: 480px) {
+  .section__media { height: 520px; }
+}
+
+.card-stack {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  perspective: 1200px;
+  transform: rotateX(var(--tiltX, 0deg)) rotateY(var(--tiltY, 0deg));
+}
+
+.card {
+  position: absolute;
+  width: min(78vw, 380px);
+  height: auto;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  user-select: none;
+  transform-origin: center 80%;
+  transition: transform .7s cubic-bezier(.19,.69,.22,1), box-shadow .4s ease, filter .4s ease, opacity .4s ease;
+  will-change: transform;
+  background: #222;
+  overflow: hidden;
+}
+
+.card:nth-child(1) {
+  transform: translate(-12px, -8px) rotate(-5deg) scale(.96);
+  z-index: 1;
+  filter: brightness(.92);
+}
+.card:nth-child(2) {
+  transform: translate(4px, 16px) rotate(4deg) scale(.98);
+  z-index: 2;
+  filter: brightness(.96);
+}
+.card:nth-child(3) {
+  transform: translate(0, 0) rotate(-1deg) scale(1);
+  z-index: 3;
+}
+
+.card.pop {
+  transform: translateY(-22px) scale(1.06) rotate(-2deg) rotateY(-10deg);
+  box-shadow: 0 26px 70px rgba(0,0,0,.5);
+  filter: brightness(1.04) saturate(1.06);
+  animation: none !important;
+}
+
+.card-stack .card:last-child {
+  animation: sway 7.5s ease-in-out infinite;
+}
+
+@keyframes sway {
+  0%   { transform: translateY(-6px)  scale(1.02) rotate(-1.5deg); filter: brightness(1.02) }
+  50%  { transform: translateY(-10px) scale(1.035) rotate(1.5deg);  filter: brightness(1.05) }
+  100% { transform: translateY(-6px)  scale(1.02) rotate(-1.5deg);  filter: brightness(1.02) }
+}
+
+.audio-ctrl {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 46px;
+  height: 46px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  box-shadow: var(--shadow);
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  transition: transform .2s ease, filter .2s ease;
+}
+.audio-ctrl:active { transform: scale(.96) }
+.audio-ctrl::before {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 14px solid currentColor;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+  margin-left: 3px;
+}
+.audio-ctrl.is-playing::before {
+  width: 4px;
+  height: 18px;
+  border: none;
+  background: currentColor;
+  box-shadow: 8px 0 0 0 currentColor;
+  margin-left: 0;
+}
+
+.section__heading {
+  margin: 0 0 8px;
+  font-size: clamp(22px, 4.6vw, 34px);
+  font-weight: 800;
+}
+
+.section__text {
+  font-size: clamp(16px, 4.2vw, 18px);
+  color: var(--fg);
+}
+
+.section__text p {
+  margin: 0 0 14px;
+  opacity: .96;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(16px) scale(.98);
+  transition: opacity .6s ease, transform .6s ease, filter .6s ease;
+  filter: blur(2px);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(12px) }
+  to { opacity: 1; transform: translateY(0) }
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(255,255,255,0.0) 30%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0.0) 70%);
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+.card.pop::after {
+  animation: shine 0.9s ease-out forwards;
+}
+
+.swipe-left { animation: swipeLeft .5s ease }
+.swipe-right { animation: swipeRight .5s ease }
+
+.dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 4;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff66;
+  box-shadow: 0 0 0 1px #0003 inset;
+}
+.dot.is-active {
+  background: #fff;
+}
+
+@keyframes shine {
+  from { transform: translateX(-120%) }
+  to { transform: translateX(120%) }
+}
+
+@keyframes swipeLeft {
+  0% { transform: translateY(-22px) scale(1.06) rotate(-2deg) rotateY(-10deg) }
+  60% { transform: translate(-10px, -14px) scale(1.04) rotate(-6deg) rotateY(-16deg) }
+  100% { transform: translate(0, 0) rotate(-1deg) scale(1) }
+}
+@keyframes swipeRight {
+  0% { transform: translateY(-22px) scale(1.06) rotate(-2deg) rotateY(10deg) }
+  60% { transform: translate(10px, -14px) scale(1.04) rotate(6deg) rotateY(16deg) }
+  100% { transform: translate(0, 0) rotate(-1deg) scale(1) }
+}
